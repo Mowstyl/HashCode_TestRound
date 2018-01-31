@@ -10,6 +10,8 @@ def loadPFile(filename):
 		r, c, l, h = [int(x) for x in first]
 	except:
 		raise ValueError('R, C, L and H must be integers!')
+	if 2*l > h:
+		raise ValueError("Maximum number of cells per slice can't be smaller than 2 x number of cells of each type")
 	pizza = []
 	for i in range(r):
 		line = f.readline().strip()
