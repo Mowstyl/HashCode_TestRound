@@ -8,6 +8,8 @@ def loadPFile(filename):
 		raise ValueError('Bad formatted file! First line must contain "R C L H"')
 	try:
 		r, c, l, h = [int(x) for x in first]
+		if r >= 1 or r <= 1000 or c >= 1 or c <= 1000 or l >= 1 or l <= 1000 or h >= 1 or h <= 1000:
+			raise ValueError('R, C, L, H must be between 1 and 1000 included!')
 	except:
 		raise ValueError('R, C, L and H must be integers!')
 	if 2*l > h:
