@@ -1,3 +1,7 @@
+#!/usr/bin/python
+
+import numpy as np
+
 # In this file we have the methods to parse the input file
 def loadPFile(filename):
 	f = open(filename, "r")
@@ -8,10 +12,10 @@ def loadPFile(filename):
 		raise ValueError('Bad formatted file! First line must contain "R C L H"')
 	try:
 		r, c, l, h = [int(x) for x in first]
-		if r >= 1 or r <= 1000 or c >= 1 or c <= 1000 or l >= 1 or l <= 1000 or h >= 1 or h <= 1000:
-			raise ValueError('R, C, L, H must be between 1 and 1000 included!')
 	except:
 		raise ValueError('R, C, L and H must be integers!')
+	if r < 1 or r > 1000 or c < 1 or c > 1000 or l < 1 or l > 1000 or h < 1 or h > 1000:
+		raise ValueError('R, C, L, H must be between 1 and 1000 included!')
 	if 2*l > h:
 		raise ValueError("Maximum number of cells per slice can't be smaller than 2 x number of cells of each type")
 	pizza = []
@@ -30,4 +34,4 @@ def loadPFile(filename):
 			else:
 				raise ValueError("Invalid character! Please only use M and T!")
 		pizza.append(row)
-	return (r, c, l, h, pizza)
+	return (r, c, l, h, np.array(pizza))
