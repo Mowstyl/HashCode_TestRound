@@ -38,36 +38,50 @@ def splitP(r, c, l, h, pizza):
 	minSplit = lowerBound(r, c, h)
 	maxSplit = upperBound(r, c, l)
 	print ("There will be between " + str(minSplit) + " and " + str(maxSplit) + " splits.")
-	result = tree(r, c, l, h, pizza, [], minSplit, maxSplit)
+	result = tree(r, c, l, h, pizza, [], minSplit, maxSplit, [])
 	return (len(result[0]), result[0], result[1])
 
-def tree(r, c, l, h, pizza, slices, lbound, ubound):
+def tree(r, c, l, h, pizza, slices, lbound, ubound, dnodes):
 	global exploredNodes
 	exploredNodes += 1
+	#if dnodes == []:
+	#	print ("vacuo")
 	#print (str(exploredNodes))
 	if len(slices) > ubound:
 		return (None, None) # Slices, Score
 	else:
 		result = (slices, validState(slices, pizza, r, c, l, h))
 		if result[1] == None:
+			dnodes.append(slices)
 			return result
+		nodes = []
 		for x1 in range(r):
 			for y1 in range(c):
 				for x2 in range(x1, min(r, x1+h)):
 					for y2 in range(y1, min(c, x2+h)):
 						nsli = slices[:] + [((x1,y1),(x2,y2))]
-						nres = tree(r, c, l, h, pizza, nsli, lbound, ubound)
-						if nres[1] != None and result[1] < nres[1]:
-							result = nres
-						if result[1] == pizza.size:
-							return result
+						if nsli not in nodes and nsli not in dnodes and (x1 != x2 or y1 != y2):
+							nodes.append(nsli)
+		for i in range(len(nodes)):
+			sli = nodes[0]
+			del nodes[0]
+			#print (sli)
+			nres = tree(r, c, l, h, pizza, sli, lbound, ubound, dnodes)
+			if nres[1] != None and result[1] < nres[1]:
+				result = nres
+			dnodes.append(sli)
+			if result[1] == pizza.size:
+				return result
 	return result
 
 def validState(slices, pizza, rows, cols, l, h): # Funcion que comprueba colisiones/solapamientos, H y L. Devuelve el score si el estado es válido, None en cualquier otro caso.
 	mat = np.zeros(rows*cols).reshape((rows,cols))
 	result = 0
 	for slice in slices:
-		x1, x2 = slice[0][0], slice[1][0]
+		try:
+			x1, x2 = slice[0][0], slice[1][0]
+		except:
+			print (slice)
 		y1, y2 = slice[0][1], slice[1][1]
 		if x1 > x2:
 			x1, x2 = x2, x1
