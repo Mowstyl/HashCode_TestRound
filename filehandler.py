@@ -19,6 +19,8 @@ def loadPFile(filename):
 	if 2*l > h:
 		raise ValueError("Maximum number of cells per slice can't be smaller than 2 x number of cells of each type")
 	pizza = []
+	countT = 0
+	countM = 0
 	for i in range(r):
 		line = f.readline().strip()
 		if line == None:
@@ -29,9 +31,11 @@ def loadPFile(filename):
 		for char in line:
 			if char == "M":
 				row.append(0)
+				countM += 1
 			elif char == "T":
 				row.append(1)
+				countT += 1
 			else:
 				raise ValueError("Invalid character! Please only use M and T!")
 		pizza.append(row)
-	return (r, c, l, h, np.array(pizza))
+	return (r, c, l, h, np.array(pizza), countM, countT)
