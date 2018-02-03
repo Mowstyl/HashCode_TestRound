@@ -31,14 +31,34 @@ def main(argv): # We expect to receive input file as first argument and output f
 	global exploredNodes
 	print ("Explored Nodes: " + str(exploredNodes))
 
+def getEntropy(pizza):
+	c = countIng(pizza)
+	sum = 0
+	for i in range(2):
+		aux = c[i]/pizza.size
+		if aux != 0:
+			sum += aux * np.log2(aux)
+	return -sum
+
+def countIng(pizza):
+	countT = np.sum(pizza)
+	return (pizza.size-countT, countT)
+
 def isPrime(n):
 	return n > 1 and all(n%i for i in islice(count(2), int(sqrt(n)-1)))
 
 def splitP(r, c, l, h, pizza, numM, numT):
-	pslices = possibleSlices(r, c, l, h, pizza)
-	print ("There are " + str(len(pslices)) + " different posible slices")
 	maxSplit = upperBound(numM, numT, l)
 	print ("At most you can made " + str(maxSplit) + " splits.")
+	pslices = possibleSlices(r, c, l, h, pizza)
+	print ("There are " + str(len(pslices)) + " different posible slices")
+	# El numero de combinaciones posibles sera de 1 + pslices!/((pslices-1)! * 1!) + ... + pslices!/(0!*pslices!)
+	# Para 34 sera de 17179869182, que con el metodo definido es computacionalmente asumible gracias a la poda.
+	# Habiendo calculado la cota superior del numero maximo posible de splits que puede tener una combinacion valida,
+	# dicho numero se reduce a el sumatorio de numeros combinatorios pslices C i, donde i va desde 1 hasta maxSplit.
+	# Asi tenemos que hay 595 combinaciones distintas
+	# Sin embargo, ya para el caso small con 100 combinaciones diferentes, tenemos mas de 10^30 combinaciones diferentes.
+	# El caso mas pequeño no es computacionalmente asumible.
 	result = tree(r, c, l, h, pizza, pslices, [], maxSplit, [])
 	return (len(result[0]), result[0], result[1])
 
@@ -90,7 +110,7 @@ def tree(r, c, l, h, pizza, pslices, slices, ubound, dnodes):
 		result = (slices, None) # Slices, Score
 	else:
 		result = (slices, validState(slices, pizza, r, c, l, h))
-		if result[1] != None:
+		if result[1] != None and len(slices) < ubound:
 			for i in range(len(pslices)):
 				nsli = slices[:] + [pslices[i]]
 				nsli.sort()
