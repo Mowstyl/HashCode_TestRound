@@ -39,7 +39,7 @@ def splitP(r, c, l, h, pizza, numM, numT):
 	print ("There are " + str(len(pslices)) + " different posible slices")
 	maxSplit = upperBound(numM, numT, l)
 	print ("At most you can made " + str(maxSplit) + " splits.")
-	result = tree(r, c, l, h, pizza, pslices, [], maxSplit, [], [])
+	result = tree(r, c, l, h, pizza, pslices, [], maxSplit, [])
 	return (len(result[0]), result[0], result[1])
 
 def possibleSlices(r, c, l, h, pizza):
@@ -52,6 +52,7 @@ def possibleSlices(r, c, l, h, pizza):
 						slice = ((x1,y1),(x2,y2))
 						if validSlice(pizza, slice, l, h):
 							slices.append(slice)
+	sorted(slices, key=sliceSize, reverse=True)
 	return slices
 
 def getSlice(pizza, slice):
@@ -70,41 +71,38 @@ def validSlice(pizza, slice, l, h):
 	nMush = size-nTom
 	return size <= h and nTom >= l and nMush >= l
 
-def tree(r, c, l, h, pizza, pslices, slices, ubound, dnodes, pnodes): # PSlices son todos las posibles porciones que se pueden tener siguiendo las reglas en la pizza dada
+def sliceSize(slice):
+	x1, x2 = slice[0][0], slice[1][0]
+	y1, y2 = slice[0][1], slice[1][1]
+	return abs(x2-x1) * abs(y2-y1)
+
+def tree(r, c, l, h, pizza, pslices, slices, ubound, dnodes):
+	# PSlices son todos las posibles porciones que se pueden tener siguiendo las reglas en la pizza dada.
+	# Slices es una lista de cortes, los realizados por este nodo.
+	# UBound es la cota superior para el numero posible de slices maximo que puede haber. No hay soluciones con mas slices. Es imposible.
+	# DNodes es una lista con los nodos ya explorados, incluyendo el actual mejor.
 	global exploredNodes
 	exploredNodes += 1
 	#if dnodes == []:
 	#	print ("vacuo")
 	#print (str(exploredNodes))
 	if len(slices) > ubound:
-		return (None, None) # Slices, Score
+		result = (slices, None) # Slices, Score
 	else:
 		result = (slices, validState(slices, pizza, r, c, l, h))
-		if result[1] == None:
-			dnodes.append(slices)
-			return result
-		nodes = []
-		for slice in pslices:
-			if slice not in slices:
-				nsli = slices[:] + [slice]
-				nodes.append(nsli)
-		#for x1 in range(r):
-		#	for y1 in range(c):
-		#		for x2 in range(x1, min(r, x1+h)):
-		#			for y2 in range(y1, min(c, x2+h)):
-		#				nsli = slices[:] + [((x1,y1),(x2,y2))]
-		#				if nsli not in nodes and nsli not in dnodes and (x1 != x2 or y1 != y2):
-		#					nodes.append(nsli)
-		for i in range(len(nodes)):
-			sli = nodes[0]
-			del nodes[0]
-			#print (sli)
-			nres = tree(r, c, l, h, pizza, pslices, sli, ubound, dnodes, [])
-			if nres[1] != None and result[1] < nres[1]:
-				result = nres
-			dnodes.append(sli)
-			if result[1] == pizza.size:
-				return result
+		if result[1] != None:
+			for i in range(len(pslices)):
+				nsli = slices[:] + [pslices[i]]
+				nsli.sort()
+				if nsli not in dnodes:
+					npslices = pslices[:]
+					del npslices[i]
+					nres = tree(r, c, l, h, pizza, npslices, nsli, ubound, dnodes)
+					if nres[1] != None and result[1] < nres[1]:
+						result = nres
+					if result[1] == pizza.size:
+						break
+	dnodes.append(slices)
 	return result
 
 def validState(slices, pizza, rows, cols, l, h): # Funcion que comprueba colisiones/solapamientos. Devuelve el score si el estado es válido, None en cualquier otro caso.
