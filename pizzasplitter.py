@@ -43,6 +43,16 @@ def countIng(pizza):
 	countT = np.sum(pizza)
 	return (pizza.size-countT, countT)
 
+def nCr(n, r):
+    f = m.factorial
+    return f(n) // f(r) // f(n-r)
+
+def calcComb(n, ms):
+	sum = 0
+	for i in range(1, ms+1):
+		sum += nCr(n, i)
+	return sum
+
 def isPrime(n):
 	return n > 1 and all(n%i for i in islice(count(2), int(sqrt(n)-1)))
 
@@ -53,13 +63,20 @@ def splitP(r, c, l, h, pizza, numM, numT):
 	print ("Entropy of the pizza: " + str(entropy) + " bits.")
 	pslices = possibleSlices(r, c, l, h, pizza)
 	print ("There are " + str(len(pslices)) + " different posible slices")
+	ncomb = calcComb(len(pslices), maxSplit)
+	print ("There are " + str(ncomb) + " different nodes")
 	# El numero de combinaciones posibles sera de 1 + pslices!/((pslices-1)! * 1!) + ... + pslices!/(0!*pslices!)
 	# Para 34 sera de 17179869182, que con el metodo definido es computacionalmente asumible gracias a la poda.
 	# Habiendo calculado la cota superior del numero maximo posible de splits que puede tener una combinacion valida,
 	# dicho numero se reduce a el sumatorio de numeros combinatorios pslices C i, donde i va desde 1 hasta maxSplit.
-	# Asi tenemos que hay 595 combinaciones distintas
-	# Sin embargo, ya para el caso small con 100 combinaciones diferentes, tenemos mas de 10^30 combinaciones diferentes.
-	# El caso mas pequeño no es computacionalmente asumible.
+	# Asi tenemos que hay 6579 combinaciones distintas
+	# Sin embargo, ya para el caso small con 100 slices diferentes y como mucho las configuraciones pueden tener 18,
+	# tenemos mas de 38 * 10^18 combinaciones distintas posibles. Para el caso big, ni siquiera se puede calcular
+	# el numero de diferentes slices posibles, tarda demasiado.
+	# Así vemos que este caso no es computacionalmente asumible. Por ello, dado que no podremos obtener el óptimo
+	# cuando el tamaño del problema sea muy grande, procederemos a tratar de alcanzar una solucion subóptima,
+	# dividiendo la pizza en partes mas pequeñas hasta que dichas partes sean de un tamaño para el que podamos
+	# calcular sin problemas el óptimo, y agregar las soluciones óptimas para alcanzar el subóptimo.
 	result = tree(r, c, l, h, pizza, pslices, [], maxSplit, [])
 	return (len(result[0]), result[0], result[1])
 
