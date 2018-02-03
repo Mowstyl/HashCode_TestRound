@@ -31,11 +31,10 @@ def main(argv): # We expect to receive input file as first argument and output f
 	global exploredNodes
 	print ("Explored Nodes: " + str(exploredNodes))
 
-def getEntropy(pizza):
-	c = countIng(pizza)
+def getEntropy(tupleCounts, total):
 	sum = 0
-	for i in range(2):
-		aux = c[i]/pizza.size
+	for i in range(len(tupleCounts)):
+		aux = tupleCounts[i]/total
 		if aux != 0:
 			sum += aux * np.log2(aux)
 	return -sum
@@ -50,6 +49,8 @@ def isPrime(n):
 def splitP(r, c, l, h, pizza, numM, numT):
 	maxSplit = upperBound(numM, numT, l)
 	print ("At most you can made " + str(maxSplit) + " splits.")
+	entropy = getEntropy((numM, numT), pizza.size)
+	print ("Entropy of the pizza: " + str(entropy) + " bits.")
 	pslices = possibleSlices(r, c, l, h, pizza)
 	print ("There are " + str(len(pslices)) + " different posible slices")
 	# El numero de combinaciones posibles sera de 1 + pslices!/((pslices-1)! * 1!) + ... + pslices!/(0!*pslices!)
