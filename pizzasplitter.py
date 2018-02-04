@@ -6,16 +6,18 @@ import math as m
 import numpy as np
 from math import sqrt
 from itertools import count, islice
+from timeit import default_timer as timer
 
 exploredNodes = 0
+lastper = 0
 #divisions = 0
 
-def main(argv): # We expect to receive input file as first argument and output file second argument (optional). If output not specified, defaults to a.out
+def main(argv): # We expect to receive input file as first argument and output file second argument (optional). If output not specified, defaults to input+.out
 	if len(argv) < 1:
 		print("Input file location expected. Output file can be also specified (optional)")
 		return
 	input = argv[0]
-	output = "a.out"
+	output = input + ".out"
 	if len(argv) > 1:
 		output = argv[1]
 	try:
@@ -27,12 +29,16 @@ def main(argv): # We expect to receive input file as first argument and output f
 		print (str(e))
 		print ("Program ended with errors!")
 		return
-	sol = splitP(r, c, l, h, pizza, numM, numT)
+	start = timer()
+	sol = splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=35)
+	end = timer()
+	print("\nTime elapsed: %.4f seconds." % round(end-start, 4))
 	print (str(sol[0]) + " slices")
-	print (sol[1])
+	#print (sol[1])
 	print ("Score: " + str(sol[2]) + "/" + str(c*r))
 	global exploredNodes
 	print ("Explored Nodes: " + str(exploredNodes))
+	fh.savePFile(output, sol)
 
 def getEntropy(tupleCounts, total):
 	sum = 0
@@ -59,7 +65,7 @@ def calcComb(n, ms):
 def isPrime(n):
 	return n > 1 and all(n%i for i in islice(count(2), int(sqrt(n)-1)))
 
-def splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=50):
+def splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=50, percentage=100, offset=0):
 	# El numero de combinaciones posibles sera de 1 + pslices!/((pslices-1)! * 1!) + ... + pslices!/(0!*pslices!)
 	# Para 34 sera de 17179869182, que con el metodo definido es computacionalmente asumible gracias a la poda.
 	# Habiendo calculado la cota superior del numero maximo posible de splits que puede tener una combinacion valida,
@@ -112,8 +118,15 @@ def splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=50):
 			c2 = c
 		num1 = countIng(pizza1)
 		num2 = (numM-num1[0], numT-num1[0])
-		sol1 = splitP(r1, c1, l, h, pizza1, num1[0], num1[1])
-		sol2 = splitP(r2, c2, l, h, pizza2, num2[0], num2[1])
+		sol1 = splitP(r1, c1, l, h, pizza1, num1[0], num1[1], maxLevel=maxLevel, maxSlices=maxSlices, percentage=percentage/2, offset=offset)
+		global lastper
+		if (m.floor(percentage/2+offset) != lastper):
+			lastper = m.floor(percentage/2+offset)
+			print(str(lastper) + "%")
+		sol2 = splitP(r2, c2, l, h, pizza2, num2[0], num2[1], maxLevel=maxLevel, maxSlices=maxSlices, percentage=percentage/2, offset=offset+percentage/2)
+		if (m.floor(percentage+offset) != lastper):
+			lastper = m.floor(percentage+offset)
+			print(str(lastper) + "%")
 		for i in range(len(sol2[1])):
 			if verticalCut:
 				sol2[1][i] = ((sol2[1][i][0][0], sol2[1][i][0][1] + cut), (sol2[1][i][1][0], sol2[1][i][1][1] + cut))

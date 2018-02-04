@@ -39,3 +39,10 @@ def loadPFile(filename):
 				raise ValueError("Invalid character! Please only use M and T!")
 		pizza.append(row)
 	return (r, c, l, h, np.array(pizza), countM, countT)
+
+# In this file we have the methods to parse the input file
+def savePFile(filename, sol):
+	f = open(filename, "w+")
+	f.write(str(sol[0]) + '\n')
+	for split in sol[1]:
+		f.write(str(split[0][0]) + ' ' + str(split[0][1]) + ' ' + str(split[1][0]) + ' ' + str(split[1][1]) + '\n')
