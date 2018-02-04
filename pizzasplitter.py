@@ -27,7 +27,9 @@ def main(argv): # We expect to receive input file as first argument and output f
 		print ("Program ended with errors!")
 		return
 	sol = splitP(r, c, l, h, pizza, numM, numT)
-	print (sol)
+	print (str(sol[0]) + " slices")
+	print (sol[1])
+	print ("Score: " + str(sol[2]) + "/" + str(c*r))
 	global exploredNodes
 	print ("Explored Nodes: " + str(exploredNodes))
 
@@ -56,20 +58,12 @@ def calcComb(n, ms):
 def isPrime(n):
 	return n > 1 and all(n%i for i in islice(count(2), int(sqrt(n)-1)))
 
-def splitP(r, c, l, h, pizza, numM, numT):
-	maxSplit = upperBound(numM, numT, l)
-	print ("At most you can made " + str(maxSplit) + " splits.")
-	entropy = getEntropy((numM, numT), pizza.size)
-	print ("Entropy of the pizza: " + str(entropy) + " bits.")
-	pslices = possibleSlices(r, c, l, h, pizza)
-	print ("There are " + str(len(pslices)) + " different posible slices")
-	ncomb = calcComb(len(pslices), maxSplit)
-	print ("There are " + str(ncomb) + " different nodes")
+def splitP(r, c, l, h, pizza, numM, numT, umbral=5):
 	# El numero de combinaciones posibles sera de 1 + pslices!/((pslices-1)! * 1!) + ... + pslices!/(0!*pslices!)
 	# Para 34 sera de 17179869182, que con el metodo definido es computacionalmente asumible gracias a la poda.
 	# Habiendo calculado la cota superior del numero maximo posible de splits que puede tener una combinacion valida,
 	# dicho numero se reduce a el sumatorio de numeros combinatorios pslices C i, donde i va desde 1 hasta maxSplit.
-	# Asi tenemos que hay 6579 combinaciones distintas
+	# Asi tenemos que hay 6579 combinaciones validas (sin comprobar colisiones) distintas.
 	# Sin embargo, ya para el caso small con 100 slices diferentes y como mucho las configuraciones pueden tener 18,
 	# tenemos mas de 38 * 10^18 combinaciones distintas posibles. Para el caso big, ni siquiera se puede calcular
 	# el numero de diferentes slices posibles, tarda demasiado.
@@ -77,8 +71,48 @@ def splitP(r, c, l, h, pizza, numM, numT):
 	# cuando el tamaño del problema sea muy grande, procederemos a tratar de alcanzar una solucion subóptima,
 	# dividiendo la pizza en partes mas pequeñas hasta que dichas partes sean de un tamaño para el que podamos
 	# calcular sin problemas el óptimo, y agregar las soluciones óptimas para alcanzar el subóptimo.
-	result = tree(r, c, l, h, pizza, pslices, [], maxSplit, [])
-	return (len(result[0]), result[0], result[1])
+	maxSplit = upperBound(numM, numT, l)
+	#print ("At most you can made " + str(maxSplit) + " splits.")
+	# Ahora, en el caso de que la profundidad máxima del árbol sea mayor que un umbral, dividiremos la pizza en dos partes
+	# y obtendremos la solución para cada parte.
+	if maxSplit <= umbral:
+		#entropy = getEntropy((numM, numT), pizza.size)
+		#print ("Entropy of the pizza: " + str(entropy) + " bits.")
+		pslices = possibleSlices(r, c, l, h, pizza)
+		#print ("There are " + str(len(pslices)) + " different posible slices")
+		#ncomb = calcComb(len(pslices), maxSplit)
+		#print ("There are " + str(ncomb) + " different nodes")
+		result = tree(r, c, l, h, pizza, pslices, [], maxSplit, [])
+		sol = (len(result[0]), result[0], result[1])
+	else:
+		verticalCut = c > r
+		if verticalCut:
+			cut = c//2
+			pizza1 = pizza[:,:cut]
+			pizza2 = pizza[:,cut:]
+			r1 = r
+			r2 = r
+			c1 = cut
+			c2 = c - cut
+		else:
+			cut = r//2
+			pizza1 = pizza[:cut,:]
+			pizza2 = pizza[cut:,:]
+			r1 = cut
+			r2 = r - cut
+			c1 = c
+			c2 = c
+		num1 = countIng(pizza1)
+		num2 = countIng(pizza2)
+		sol1 = splitP(r1, c1, l, h, pizza1, num1[0], num1[1])
+		sol2 = splitP(r2, c2, l, h, pizza2, num2[0], num2[1])
+		for i in range(len(sol2[1])):
+			if verticalCut:
+				sol2[1][i] = ((sol2[1][i][0][0], sol2[1][i][0][1] + cut), (sol2[1][i][1][0], sol2[1][i][1][1] + cut))
+			else:
+				sol2[1][i] = ((sol2[1][i][0][0] + cut, sol2[1][i][0][1]), (sol2[1][i][1][0] + cut, sol2[1][i][1][1]))
+		sol = (sol1[0] + sol2[0], sol1[1] + sol2[1], sol1[2] + sol2[2])
+	return sol
 
 def possibleSlices(r, c, l, h, pizza):
 	slices = []
