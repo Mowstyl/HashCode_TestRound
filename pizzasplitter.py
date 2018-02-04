@@ -8,6 +8,7 @@ from math import sqrt
 from itertools import count, islice
 
 exploredNodes = 0
+#divisions = 0
 
 def main(argv): # We expect to receive input file as first argument and output file second argument (optional). If output not specified, defaults to a.out
 	if len(argv) < 1:
@@ -58,7 +59,7 @@ def calcComb(n, ms):
 def isPrime(n):
 	return n > 1 and all(n%i for i in islice(count(2), int(sqrt(n)-1)))
 
-def splitP(r, c, l, h, pizza, numM, numT, umbral=5):
+def splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=50):
 	# El numero de combinaciones posibles sera de 1 + pslices!/((pslices-1)! * 1!) + ... + pslices!/(0!*pslices!)
 	# Para 34 sera de 17179869182, que con el metodo definido es computacionalmente asumible gracias a la poda.
 	# Habiendo calculado la cota superior del numero maximo posible de splits que puede tener una combinacion valida,
@@ -75,16 +76,23 @@ def splitP(r, c, l, h, pizza, numM, numT, umbral=5):
 	#print ("At most you can made " + str(maxSplit) + " splits.")
 	# Ahora, en el caso de que la profundidad máxima del árbol sea mayor que un umbral, dividiremos la pizza en dos partes
 	# y obtendremos la solución para cada parte.
-	if maxSplit <= umbral:
+	if maxSplit <= maxLevel:
 		#entropy = getEntropy((numM, numT), pizza.size)
 		#print ("Entropy of the pizza: " + str(entropy) + " bits.")
 		pslices = possibleSlices(r, c, l, h, pizza)
 		#print ("There are " + str(len(pslices)) + " different posible slices")
-		#ncomb = calcComb(len(pslices), maxSplit)
-		#print ("There are " + str(ncomb) + " different nodes")
-		result = tree(r, c, l, h, pizza, pslices, [], maxSplit, [])
-		sol = (len(result[0]), result[0], result[1])
-	else:
+		if len(pslices) <= maxSlices and len(pslices) > 0:
+			#ncomb = calcComb(len(pslices), maxSplit)
+			#print ("There are " + str(ncomb) + " different nodes")
+
+			result = tree(r, c, l, h, pizza, pslices, [], maxSplit, [])
+			sol = (len(result[0]), result[0], result[1])
+		elif len(pslices) == 0:
+			sol = (0, [], None)
+	if maxSplit > maxLevel or len(pslices) > maxSlices:
+		#global divisions
+		#divisions += 1
+		#print (str(divisions) + " hard splits done.")
 		verticalCut = c > r
 		if verticalCut:
 			cut = c//2
@@ -103,7 +111,7 @@ def splitP(r, c, l, h, pizza, numM, numT, umbral=5):
 			c1 = c
 			c2 = c
 		num1 = countIng(pizza1)
-		num2 = countIng(pizza2)
+		num2 = (numM-num1[0], numT-num1[0])
 		sol1 = splitP(r1, c1, l, h, pizza1, num1[0], num1[1])
 		sol2 = splitP(r2, c2, l, h, pizza2, num2[0], num2[1])
 		for i in range(len(sol2[1])):
@@ -111,7 +119,13 @@ def splitP(r, c, l, h, pizza, numM, numT, umbral=5):
 				sol2[1][i] = ((sol2[1][i][0][0], sol2[1][i][0][1] + cut), (sol2[1][i][1][0], sol2[1][i][1][1] + cut))
 			else:
 				sol2[1][i] = ((sol2[1][i][0][0] + cut, sol2[1][i][0][1]), (sol2[1][i][1][0] + cut, sol2[1][i][1][1]))
-		sol = (sol1[0] + sol2[0], sol1[1] + sol2[1], sol1[2] + sol2[2])
+		try:
+			sol = (sol1[0] + sol2[0], sol1[1] + sol2[1], sol1[2] + sol2[2])
+		except:
+			if sol1[2] == None:
+				sol = sol2
+			else:
+				sol = sol1
 	return sol
 
 def possibleSlices(r, c, l, h, pizza):
