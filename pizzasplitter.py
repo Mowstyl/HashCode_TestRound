@@ -36,9 +36,9 @@ def main(argv): # We expect to receive input file as first argument and output f
 		maxSlices = 50
 	try:
 		r, c, l, h, pizza, numM, numT = fh.loadPFile(input)
-		if isPrime(h) and h != 2:
-			h -= 1
-			print ("H is a prime number. A slice can't have H cells if H is prime (not 2).\nReducing H to " + str(h))
+		#if isPrime(h) and h != 2:
+		#	h -= 1
+		#	print ("H is a prime number. A slice can't have H cells if H is prime (not 2).\nReducing H to " + str(h))
 	except Exception as e:
 		print (str(e))
 		print ("Program ended with errors!")
