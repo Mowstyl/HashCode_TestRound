@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import numpy as np
+import os
+import shutil
 
 # In this file we have the methods to parse the input file
 def loadPFile(filename):
@@ -43,7 +45,12 @@ def loadPFile(filename):
 
 # In this file we have the methods to parse the input file
 def savePFile(filename, sol):
+	if not os.path.exists(filename):
+		os.makedirs(filename)
+		shutil.rmtree(filename)
+
 	f = open(filename, "w+")
+
 	f.write(str(sol[0]) + '\n')
 	for split in sol[1]:
 		f.write(str(split[0][0]) + ' ' + str(split[0][1]) + ' ' + str(split[1][0]) + ' ' + str(split[1][1]) + '\n')
