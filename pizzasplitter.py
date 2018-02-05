@@ -18,8 +18,22 @@ def main(argv): # We expect to receive input file as first argument and output f
 		return
 	input = argv[0]
 	output = input + ".out"
+	maxLevel = 5
+	maxSlices = 50
 	if len(argv) > 1:
 		output = argv[1]
+	try:
+		if len(argv) > 2:
+			maxLevel = int(argv[2])
+	except:
+		print("maxLevel must be an integer. Default to maxLevel=5")
+		maxLevel = 5
+	try:
+		if len(argv) > 3:
+			maxSlices = int(argv[3])
+	except:
+		print("maxSlices must be an integer. Default to maxSlices=50")
+		maxSlices = 50
 	try:
 		r, c, l, h, pizza, numM, numT = fh.loadPFile(input)
 		if isPrime(h) and h != 2:
@@ -30,7 +44,7 @@ def main(argv): # We expect to receive input file as first argument and output f
 		print ("Program ended with errors!")
 		return
 	start = timer()
-	sol = splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=35)
+	sol = splitP(r, c, l, h, pizza, numM, numT, maxLevel=maxLevel, maxSlices=maxSlices)
 	end = timer()
 	print("\nTime elapsed: %.4f seconds." % round(end-start, 4))
 	print (str(sol[0]) + " slices")
@@ -53,8 +67,11 @@ def countIng(pizza):
 	return (pizza.size-countT, countT)
 
 def nCr(n, r):
-    f = m.factorial
-    return f(n) // f(r) // f(n-r)
+	f = m.factorial
+	sol = 0
+	if r <= n:
+		sol = f(n) // f(r) // f(n-r)
+	return sol
 
 def calcComb(n, ms):
 	sum = 0

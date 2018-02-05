@@ -22,9 +22,10 @@ def loadPFile(filename):
 	countT = 0
 	countM = 0
 	for i in range(r):
-		line = f.readline().strip()
+		line = f.readline()
 		if line == None:
 			raise ValueError("Invalid number of rows! Expected " + str(r))
+		line = line.strip()
 		if len(line) != c:
 			raise ValueError("Invalid number of columns! Expected " + str(c) + " Found " + str(len(line)))
 		row = []
