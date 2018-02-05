@@ -111,7 +111,7 @@ def splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=50, percentage=1
 			result = tree(r, c, l, h, pizza, pslices, [], maxSplit, [])
 			sol = (len(result[0]), result[0], result[1])
 		elif len(pslices) == 0:
-			sol = (0, [], None)
+			sol = (0, [], 0)
 	if maxSplit > maxLevel or len(pslices) > maxSlices:
 		#global divisions
 		#divisions += 1
@@ -202,6 +202,7 @@ def tree(r, c, l, h, pizza, pslices, slices, ubound, dnodes):
 	#if dnodes == []:
 	#	print ("vacuo")
 	#print (str(exploredNodes))
+	dnodes.append(slices)
 	if len(slices) > ubound:
 		result = (slices, None) # Slices, Score
 	else:
@@ -218,7 +219,6 @@ def tree(r, c, l, h, pizza, pslices, slices, ubound, dnodes):
 						result = nres
 					if result[1] == pizza.size:
 						break
-	dnodes.append(slices)
 	return result
 
 def validState(slices, pizza, rows, cols, l, h): # Funcion que comprueba colisiones/solapamientos. Devuelve el score si el estado es válido, None en cualquier otro caso.
