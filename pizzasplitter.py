@@ -62,6 +62,29 @@ def getEntropy(tupleCounts, total):
 			sum += aux * np.log2(aux)
 	return -sum
 
+def calculateCut(r, c, pizza, entropy = False):
+	if not entropy:
+		verticalCut = c > r
+		if verticalCut:
+			cut = c//2
+			pizza1 = pizza[:,:cut]
+			pizza2 = pizza[:,cut:]
+			r1 = r
+			r2 = r
+			c1 = cut
+			c2 = c - cut
+		else:
+			cut = r//2
+			pizza1 = pizza[:cut,:]
+			pizza2 = pizza[cut:,:]
+			r1 = cut
+			r2 = r - cut
+			c1 = c
+			c2 = c
+	else:
+		pass
+	return (r1, c1, pizza1, r2, c2, pizza2, cut, verticalCut)
+
 def countIng(pizza):
 	countT = np.sum(pizza)
 	return (pizza.size-countT, countT)
@@ -116,23 +139,7 @@ def splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=50, percentage=1
 		#global divisions
 		#divisions += 1
 		#print (str(divisions) + " hard splits done.")
-		verticalCut = c > r
-		if verticalCut:
-			cut = c//2
-			pizza1 = pizza[:,:cut]
-			pizza2 = pizza[:,cut:]
-			r1 = r
-			r2 = r
-			c1 = cut
-			c2 = c - cut
-		else:
-			cut = r//2
-			pizza1 = pizza[:cut,:]
-			pizza2 = pizza[cut:,:]
-			r1 = cut
-			r2 = r - cut
-			c1 = c
-			c2 = c
+		(r1, c1, pizza1, r2, c2, pizza2, cut, verticalCut) = calculateCut(r, c, pizza, entropy = False)
 		num1 = countIng(pizza1)
 		num2 = (numM-num1[0], numT-num1[0])
 		sol1 = splitP(r1, c1, l, h, pizza1, num1[0], num1[1], maxLevel=maxLevel, maxSlices=maxSlices, percentage=percentage/2, offset=offset)
