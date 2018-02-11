@@ -44,7 +44,7 @@ def main(argv): # We expect to receive input file as first argument and output f
 		print ("Program ended with errors!")
 		return
 	start = timer()
-	sol = splitP(r, c, l, h, pizza, numM, numT, maxLevel=maxLevel, maxSlices=maxSlices)
+	sol = splitP(r, c, l, h, pizza, numM, numT, maxLevel=maxLevel, maxSlices=maxSlices, entropy = True)
 	end = timer()
 	print("\nTime elapsed: %.4f seconds." % round(end-start, 4))
 	print (str(sol[0]) + " slices")
@@ -55,34 +55,76 @@ def main(argv): # We expect to receive input file as first argument and output f
 	fh.savePFile(output, sol)
 
 def getEntropy(tupleCounts, total):
+	#for i in range(len(tupleCounts)):
+	#	aux = tupleCounts[i]/total
+	#	if aux != 0:
+	#		sum += aux * np.log2(aux)
+	#return -sum
+	
 	sum = 0
-	for i in range(len(tupleCounts)):
-		aux = tupleCounts[i]/total
-		if aux != 0:
-			sum += aux * np.log2(aux)
-	return -sum
+	
+	auxOne = np.count_nonzero(tupleCounts)
+	auxZero = total - auxOne
+	sum += abs((auxOne / total) * np.log2(auxOne / total))
+	sum += abs((auxZero / total) * np.log2(auxZero / total))
+	
+	return sum
 
 def calculateCut(r, c, pizza, entropy = False):
-	if not entropy:
+	if entropy:
+		entropyScore = 0 #getEntropy(pizza,np.size(pizza))
+		verticalCut = False
+		for provisional_cut in range(1,r-1):
+			ent = 0			
+			r1 = provisional_cut
+			r2 = r - provisional_cut
+			c1 = c
+			c2 = c
+			pizza1 = pizza[:provisional_cut,:]
+			total = np.size(pizza1)
+			ent += getEntropy(pizza1, total) * (np.size(pizza1)/total)
+			pizza2 = pizza[provisional_cut:,:]
+			total = np.size(pizza2)
+			ent += getEntropy(pizza2, total) * (np.size(pizza2)/total)
+			if ent > entropyScore:
+				entropyScore = ent
+				cut = provisional_cut
+		for provisional_cut in range(1,c-1):
+			ent = 0			
+			r1 = r
+			r2 = r
+			c1 = provisional_cut
+			c2 = c - provisional_cut
+			pizza1 = pizza[:,:provisional_cut]
+			ent += getEntropy(pizza1, pizza1.size)
+			pizza2 = pizza[:,provisional_cut:]
+			ent += getEntropy(pizza2, pizza2.size)
+			if ent > entropyScore:
+				entropyScore = ent
+				cut = provisional_cut
+				verticalCut = True
+	else:
 		verticalCut = c > r
 		if verticalCut:
 			cut = c//2
-			pizza1 = pizza[:,:cut]
-			pizza2 = pizza[:,cut:]
-			r1 = r
-			r2 = r
-			c1 = cut
-			c2 = c - cut
 		else:
 			cut = r//2
-			pizza1 = pizza[:cut,:]
-			pizza2 = pizza[cut:,:]
-			r1 = cut
-			r2 = r - cut
-			c1 = c
-			c2 = c
+
+	if verticalCut:
+		pizza1 = pizza[:,:cut]
+		pizza2 = pizza[:,cut:]
+		r1 = r
+		r2 = r
+		c1 = cut
+		c2 = c - cut
 	else:
-		pass
+		pizza1 = pizza[:cut,:]
+		pizza2 = pizza[cut:,:]
+		r1 = cut
+		r2 = r - cut
+		c1 = c
+		c2 = c
+	
 	return (r1, c1, pizza1, r2, c2, pizza2, cut, verticalCut)
 
 def countIng(pizza):
@@ -105,7 +147,7 @@ def calcComb(n, ms):
 def isPrime(n):
 	return n > 1 and all(n%i for i in islice(count(2), int(sqrt(n)-1)))
 
-def splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=50, percentage=100, offset=0):
+def splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=50, percentage=100, offset=0, entropy = False):
 	# El numero de combinaciones posibles sera de 1 + pslices!/((pslices-1)! * 1!) + ... + pslices!/(0!*pslices!)
 	# Para 34 sera de 17179869182, que con el metodo definido es computacionalmente asumible gracias a la poda.
 	# Habiendo calculado la cota superior del numero maximo posible de splits que puede tener una combinacion valida,
@@ -139,15 +181,15 @@ def splitP(r, c, l, h, pizza, numM, numT, maxLevel=5, maxSlices=50, percentage=1
 		#global divisions
 		#divisions += 1
 		#print (str(divisions) + " hard splits done.")
-		(r1, c1, pizza1, r2, c2, pizza2, cut, verticalCut) = calculateCut(r, c, pizza, entropy = False)
+		(r1, c1, pizza1, r2, c2, pizza2, cut, verticalCut) = calculateCut(r, c, pizza, entropy = entropy)
 		num1 = countIng(pizza1)
 		num2 = (numM-num1[0], numT-num1[0])
-		sol1 = splitP(r1, c1, l, h, pizza1, num1[0], num1[1], maxLevel=maxLevel, maxSlices=maxSlices, percentage=percentage/2, offset=offset)
+		sol1 = splitP(r1, c1, l, h, pizza1, num1[0], num1[1], maxLevel=maxLevel, maxSlices=maxSlices, percentage=percentage/2, offset=offset, entropy = entropy)
 		global lastper
 		if (m.floor(percentage/2+offset) != lastper):
 			lastper = m.floor(percentage/2+offset)
 			print(str(lastper) + "%")
-		sol2 = splitP(r2, c2, l, h, pizza2, num2[0], num2[1], maxLevel=maxLevel, maxSlices=maxSlices, percentage=percentage/2, offset=offset+percentage/2)
+		sol2 = splitP(r2, c2, l, h, pizza2, num2[0], num2[1], maxLevel=maxLevel, maxSlices=maxSlices, percentage=percentage/2, offset=offset+percentage/2, entropy = entropy)
 		if (m.floor(percentage+offset) != lastper):
 			lastper = m.floor(percentage+offset)
 			print(str(lastper) + "%")
